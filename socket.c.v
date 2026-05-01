@@ -124,7 +124,7 @@ pub fn (s Socket) get_option[T](level SocketLevel, option SocketOption) !T {
 	return result
 }
 
-// receive a message from a connected socket.
+// recv receives a message from a connected socket.
 // See [recv(3p)](https://man7.org/linux/man-pages/man3/recv.3p.html) for details.
 pub fn (s Socket) recv(mut buf []u8, flags MsgFlag) !int {
 	r := C.recv(s.fd, buf.data, buf.len, flags)
@@ -134,7 +134,8 @@ pub fn (s Socket) recv(mut buf []u8, flags MsgFlag) !int {
 	return r
 }
 
-// receive a message from a connected socket.
+// recv_from receives a message from a connected socket and returns the number of bytes
+// read and the remote peer address.
 // See [recvfrom(3p)](https://man7.org/linux/man-pages/man3/recvfrom.3p.html) for details.
 pub fn (s Socket) recv_from(mut buf []u8, flags MsgFlag) !(int, SocketAddr) {
 	mut sock_addr_storage := &C.sockaddr_storage{}
@@ -146,7 +147,7 @@ pub fn (s Socket) recv_from(mut buf []u8, flags MsgFlag) !(int, SocketAddr) {
 	return r, unsafe { SocketAddr.from_ptr(sock_addr_storage, sock_addr_len)! }
 }
 
-// send a message on socket.
+// send sends a message on socket.
 // See [send(3p)](https://man7.org/linux/man-pages/man3/send.3p.html) for details.
 pub fn (s Socket) send(buf []u8, flags MsgFlag) !int {
 	r := C.send(s.fd, buf.data, buf.len, flags)
@@ -156,7 +157,8 @@ pub fn (s Socket) send(buf []u8, flags MsgFlag) !int {
 	return r
 }
 
-// send a message on socket using the dst socket address as destination instead of the socket peer address.
+// send_to sends a message on socket using the dst socket address as destination
+// instead of the socket peer address.
 // See [sendto(3p)](https://man7.org/linux/man-pages/man3/sendto.3p.html) for details.
 pub fn (s Socket) send_to(buf []u8, dst SocketAddr, flags MsgFlag) !int {
 	r := C.sendto(s.fd, buf.data, buf.len, flags, dst.ptr(), dst.size())
