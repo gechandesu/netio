@@ -5,7 +5,7 @@ fn main() {
 	is_test := '-test' in arguments()
 
 	// Create listen address.
-	listen_addr := netio.SocketAddr.new_ipv4([..]u8[127, 0, 0, 1], 1088)
+	listen_addr := netio.SocketAddr.new_ipv4([u8(127), 0, 0, 1]!, 1088)
 
 	// Create server socket.
 	socket := netio.Socket.new(netio.af_inet, netio.sock_stream, 0) or {

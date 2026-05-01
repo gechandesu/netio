@@ -13,7 +13,7 @@ fn main() {
 	}
 
 	// Create the server socket address.
-	server_addr := netio.SocketAddr.new_ipv4([..]u8[127, 0, 0, 1], 1088)
+	server_addr := netio.SocketAddr.new_ipv4([u8(127), 0, 0, 1]!, 1088)
 
 	// Connect socket to the server address.
 	socket.connect(server_addr) or {
