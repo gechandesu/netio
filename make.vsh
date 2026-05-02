@@ -19,19 +19,25 @@ import strings
 
 const cincludes = {
 	'Linux':   '
-		|#include <netinet/in.h>
 		|#include <sys/socket.h>
-		|#include <netdb.h>'
+		|#include <netdb.h>
+		|#include <netinet/in.h>
+		|#include <netinet/tcp.h>
+		|#include <netinet/udp.h>
+		'
 	'FreeBSD': '
-		|#include <netinet/in.h>
 		|#include <sys/socket.h>
-		|#include <netdb.h>'
+		|#include <netdb.h>
+		|#include <netinet/in.h>
+		|#include <netinet/tcp.h>
+		|#include <netinet/udp.h>
+		'
 }
 
 const typemap = {
 	'SocketType':   ['SOCK_']
 	'SocketLevel':  ['SOL_', 'IPPROTO_']
-	'SocketOption': ['SO_', 'IP_', 'IPV6_']
+	'SocketOption': ['SO_', 'IP_', 'IPV6_', 'TCP_', 'UDP_']
 	'AddrFamily':   ['AF_']
 	'AddrInfoFlag': ['AI_']
 	'NameInfoFlag': ['NI_']
