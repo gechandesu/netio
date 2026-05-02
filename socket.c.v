@@ -15,9 +15,9 @@ fn C.close(i32) i32
 fn C.setsockopt(i32, i32, i32, voidptr, i32) i32
 fn C.getsockopt(i32, i32, i32, voidptr, voidptr) i32
 fn C.recv(i32, voidptr, usize, i32) i32
-fn C.recvfrom(i32, voidptr, usize, i32, voidptr, i32) i32
+fn C.recvfrom(i32, voidptr, usize, i32, voidptr, &u32) i32
 fn C.send(i32, voidptr, usize, i32) i32
-fn C.sendto(i32, voidptr, usize, i32, voidptr, i32) i32
+fn C.sendto(i32, voidptr, usize, i32, voidptr, u32) i32
 
 pub struct Socket {
 pub:

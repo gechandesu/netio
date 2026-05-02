@@ -6,7 +6,7 @@ import os
 
 fn C.getaddrinfo(&char, &char, &C.addrinfo, &&C.addrinfo) i32
 fn C.freeaddrinfo(&C.addrinfo)
-fn C.getnameinfo(voidptr, i32, &char, i32, &char, i32, i32) i32
+fn C.getnameinfo(voidptr, u32, &char, u32, &char, u32, i32) i32
 fn C.gai_strerror(i32) &char
 
 struct C.addrinfo {
