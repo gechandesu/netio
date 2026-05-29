@@ -89,6 +89,9 @@ pub fn SocketAddr.new_unix(path string) !SocketAddr {
 // (sin_family in this case) is already written. According to the manual page, the
 // address and port are written using the network (big-endian) byte order.
 //
+// On *BSD, the first byte of the socket address stores the address size, and the second
+// byte stores the address family.
+//
 // Example:
 // ```v
 // import encoding.binary
@@ -122,10 +125,16 @@ pub fn SocketAddr.new(af AddrFamily, size isize) SocketAddr {
 		len:  int(size)
 	}
 	unsafe {
-		$if little_endian {
-			sock_addr.write(binary.little_endian_get_u16(u16(af))) or {}
+		$if bsd {
+			// On *BSD sockaddr's first byte is address len, second byte is address family.
+			// See <sys/socket.h>.
+			sock_addr.write([u8(size), u8(af)]) or {}
 		} $else {
-			sock_addr.write(binary.big_endian_get_u16(u16(af))) or {}
+			$if little_endian {
+				sock_addr.write(binary.little_endian_get_u16(u16(af))) or {}
+			} $else {
+				sock_addr.write(binary.big_endian_get_u16(u16(af))) or {}
+			}
 		}
 	}
 	return sock_addr
@@ -167,7 +176,13 @@ pub fn (a SocketAddr) family() AddrFamily {
 		return 0
 	}
 	mut f := 0
-	unsafe { vmemcpy(&f, a.data, isize(2)) }
+	unsafe {
+		$if bsd {
+			vmemcpy(&f, a.data + 1, isize(1))
+		} $else {
+			vmemcpy(&f, a.data, isize(2))
+		}
+	}
 	return f
 }
 
@@ -177,7 +192,8 @@ pub fn (a SocketAddr) is_empty() bool {
 	if isnil(a.data) {
 		return true
 	}
-	for i := 0; i < a.len; i++ {
+	start_point := $if bsd { 1 } $else { 0 } // skip first byte on *BSD
+	for i := start_point; i < a.len; i++ {
 		if unsafe { a.data[i] } != 0 {
 			return false
 		}
