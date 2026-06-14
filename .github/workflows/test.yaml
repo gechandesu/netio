@@ -23,4 +23,4 @@ jobs:
           v fmt -verify .
           v vet -v -W -I -F -r .
           v missdoc -r --verify .
-          v -stats test .
+          VFLAGS='-path ../|@vlib' v test .
