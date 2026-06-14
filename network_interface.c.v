@@ -2,17 +2,39 @@ module netio
 
 import os
 
-#include <net/if.h>
+$if windows {
+	#flag -lws2_32
+	#flag -liphlpapi
+	#include <winsock2.h>
+	#include <ws2tcpip.h>
+	#include <netioapi.h>
 
-struct C.if_nameindex {
-	if_index u32
-	if_name  &char
+	fn C.WSAGetLastError() i32
+} $else {
+	#include <net/if.h>
 }
 
 fn C.if_nametoindex(&char) u32
 fn C.if_indextoname(u32, &char) &char
-fn C.if_nameindex() &C.if_nameindex
-fn C.if_freenameindex(voidptr)
+
+$if !windows {
+	struct C.if_nameindex {
+		if_index u32
+		if_name  &char
+	}
+
+	fn C.if_nameindex() &C.if_nameindex
+	fn C.if_freenameindex(voidptr)
+}
+
+fn network_interface_last_error() IError {
+	$if windows {
+		code := int(C.WSAGetLastError())
+		return error_with_code(os.get_error_msg(code), code)
+	} $else {
+		return os.last_error()
+	}
+}
 
 pub struct NetworkInterfaceNotFound {
 	Error
@@ -35,13 +57,19 @@ pub fn (e NetworkInterfaceNotFound) msg() string {
 pub fn name_to_index(name string) !u32 {
 	index := C.if_nametoindex(&char(name.str))
 	if index == 0 {
-		err := os.last_error()
-		if err.code() == 19 { // ENODEV
+		$if windows {
 			return NetworkInterfaceNotFound{
 				name: name
 			}
-		} else {
-			return err
+		} $else {
+			err := network_interface_last_error()
+			if err.code() == 19 { // ENODEV
+				return NetworkInterfaceNotFound{
+					name: name
+				}
+			} else {
+				return err
+			}
 		}
 	}
 	return index
@@ -53,15 +81,20 @@ pub fn index_to_name(index u32) !string {
 	name := []u8{len: C.IF_NAMESIZE}
 	ifname := C.if_indextoname(index, name.data)
 	if isnil(ifname) {
-		err := os.last_error()
-		if err.code() == 6 { // ENXIO
+		$if windows {
 			return NetworkInterfaceNotFound{
 				index: index
 			}
-		} else {
-			return err
+		} $else {
+			err := network_interface_last_error()
+			if err.code() == 6 { // ENXIO
+				return NetworkInterfaceNotFound{
+					index: index
+				}
+			} else {
+				return err
+			}
 		}
-		return os.last_error()
 	}
 	return unsafe { cstring_to_vstring(ifname) }
 }
@@ -96,25 +129,43 @@ pub fn find_network_interface(s string) !NetworkInterfaceId {
 // network_interfaces returns an array with names and indexes of all network interfaces on system.
 // See also [if_nameindex(3p)](https://man7.org/linux/man-pages/man3/if_nameindex.3p.html).
 pub fn network_interfaces() ![]NetworkInterfaceId {
-	ifaces := C.if_nameindex()
-	if isnil(ifaces) {
-		return os.last_error()
-	}
-	defer {
-		C.if_freenameindex(ifaces)
-	}
-	mut result := []NetworkInterfaceId{}
-	mut i := 0
-	for {
-		iface := unsafe { ifaces[i] }
-		i++
-		if iface.if_index == 0 && isnil(iface.if_name) {
-			break
+	$if windows {
+		mut result := []NetworkInterfaceId{}
+		mut name := []u8{len: C.IF_NAMESIZE}
+		for index in u32(1) .. u32(256) {
+			ifname := C.if_indextoname(index, name.data)
+			if !isnil(ifname) {
+				result << NetworkInterfaceId{
+					index: index
+					name:  unsafe { cstring_to_vstring(ifname) }
+				}
+			}
 		}
-		result << NetworkInterfaceId{
-			index: iface.if_index
-			name:  unsafe { cstring_to_vstring(iface.if_name) }
+		if result.len == 0 {
+			return network_interface_last_error()
 		}
+		return result
+	} $else {
+		ifaces := C.if_nameindex()
+		if isnil(ifaces) {
+			return network_interface_last_error()
+		}
+		defer {
+			C.if_freenameindex(ifaces)
+		}
+		mut result := []NetworkInterfaceId{}
+		mut i := 0
+		for {
+			iface := unsafe { ifaces[i] }
+			i++
+			if iface.if_index == 0 && isnil(iface.if_name) {
+				break
+			}
+			result << NetworkInterfaceId{
+				index: iface.if_index
+				name:  unsafe { cstring_to_vstring(iface.if_name) }
+			}
+		}
+		return result
 	}
-	return result
 }

@@ -12,8 +12,9 @@ fn test_socket_addr_new_ipv6() {
 }
 
 fn test_socket_addr_new_unix() {
-	addr := netio.SocketAddr.new_unix('/run/app.sock')!
-	assert addr.str() == '/run/app.sock'
+	path := $if windows { r'\\.\pipe\app.sock' } $else { '/run/app.sock' }
+	addr := netio.SocketAddr.new_unix(path)!
+	assert addr.str() == path
 }
 
 fn test_socket_addr_is_empty() {
