@@ -10,7 +10,7 @@ jobs:
   test-linux:
     runs-on: ubuntu-latest
     env:
-      VFLAGS: -path ../|@vlib
+      VFLAGS: '-path "../|@vlib"'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -30,16 +30,15 @@ jobs:
   test-windows:
     runs-on: windows-latest
     env:
-      VFLAGS: -path ../|@vlib -cc gcc
+      VFLAGS: '-path "../|@vlib" -cc gcc'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Setup V
         run: |
-          mkdir %TEMP%\v
-          git clone --depth=1 https://github.com/vlang/v %TEMP%\v && cd %TEMP%\v && .\makev.bat -gcc
-          %TEMP%\v\v.exe symlink
+          git clone --depth=1 https://github.com/vlang/v C:\v && cd C:\v && .\makev.bat -gcc
+          C:\v\v.exe symlink
           v version
 
       - name: Run tests
