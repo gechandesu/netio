@@ -12,8 +12,8 @@ fn C.listen(i32, i32) i32
 fn C.accept(i32, voidptr, voidptr) i32
 fn C.shutdown(i32, i32) i32
 fn C.close(i32) i32
-fn C.setsockopt(i32, i32, i32, voidptr, i32) i32
-fn C.getsockopt(i32, i32, i32, voidptr, voidptr) i32
+fn C.setsockopt(i32, i32, i32, voidptr, u32) i32
+fn C.getsockopt(i32, i32, i32, voidptr, &u32) i32
 fn C.recv(i32, voidptr, usize, i32) i32
 fn C.recvfrom(i32, voidptr, usize, i32, voidptr, &u32) i32
 fn C.send(i32, voidptr, usize, i32) i32
@@ -102,7 +102,7 @@ pub fn (s Socket) set_option[T](level SocketLevel, option SocketOption, value T)
 	s.set_option_raw(level, option, &value)!
 }
 
-fn (s Socket) get_option_raw(level SocketLevel, option SocketOption, mut value voidptr, mut size voidptr) ! {
+fn (s Socket) get_option_raw(level SocketLevel, option SocketOption, mut value &i32, mut size &u32) ! {
 	if C.getsockopt(s.fd, i32(level), i32(option), value, size) == -1 {
 		return os.last_error()
 	}
@@ -118,10 +118,14 @@ fn (s Socket) get_option_raw(level SocketLevel, option SocketOption, mut value v
 // assert socket.get_option[int](netio.sol_socket, netio.so_reuseaddr)! == 1
 // ```
 pub fn (s Socket) get_option[T](level SocketLevel, option SocketOption) !T {
-	mut result := T{}
+	mut result := i32(0)
 	mut size := sizeof(result)
 	s.get_option_raw(level, option, mut &result, mut &size)!
-	return result
+	$if T is bool {
+		return result != 0
+	} $else {
+		return T(result)
+	}
 }
 
 // recv receives a message from a connected socket.
