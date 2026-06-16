@@ -36,9 +36,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup V
+        shell: powershell
         run: |
           git clone --depth=1 https://github.com/vlang/v C:\Temp\v && cd C:\Temp\v && .\makev.bat -gcc
-          .\v.exe symlink
+          Add-Content $env:GITHUB_PATH "C:\Temp\v"
           v version
 
       - name: Run tests
