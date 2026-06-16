@@ -37,9 +37,8 @@ jobs:
 
       - name: Setup V
         run: |
-          mkdir C:\temp
-          git clone --depth=1 https://github.com/vlang/v C:\temp\v && cd C:\temp\v && .\makev.bat -gcc
-          C:\temp\v\v.exe symlink
+          git clone --depth=1 https://github.com/vlang/v C:\Temp\v && cd C:\Temp\v && .\makev.bat -gcc
+          .\v.exe symlink
           v version
 
       - name: Run tests
