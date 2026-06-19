@@ -8,8 +8,6 @@ $if windows {
 	#include <winsock2.h>
 	#include <ws2tcpip.h>
 	#include <netioapi.h>
-
-	fn C.WSAGetLastError() i32
 } $else {
 	#include <net/if.h>
 }
@@ -25,15 +23,6 @@ $if !windows {
 
 	fn C.if_nameindex() &C.if_nameindex
 	fn C.if_freenameindex(voidptr)
-}
-
-fn network_interface_last_error() IError {
-	$if windows {
-		code := int(C.WSAGetLastError())
-		return error_with_code(os.get_error_msg(code), code)
-	} $else {
-		return os.last_error()
-	}
 }
 
 pub struct NetworkInterfaceNotFound {
@@ -62,7 +51,7 @@ pub fn name_to_index(name string) !u32 {
 				name: name
 			}
 		} $else {
-			err := network_interface_last_error()
+			err := last_error()
 			if err.code() == 19 { // ENODEV
 				return NetworkInterfaceNotFound{
 					name: name
@@ -86,7 +75,7 @@ pub fn index_to_name(index u32) !string {
 				index: index
 			}
 		} $else {
-			err := network_interface_last_error()
+			err := last_error()
 			if err.code() == 6 { // ENXIO
 				return NetworkInterfaceNotFound{
 					index: index
@@ -142,13 +131,13 @@ pub fn network_interfaces() ![]NetworkInterfaceId {
 			}
 		}
 		if result.len == 0 {
-			return network_interface_last_error()
+			return last_error()
 		}
 		return result
 	} $else {
 		ifaces := C.if_nameindex()
 		if isnil(ifaces) {
-			return network_interface_last_error()
+			return last_error()
 		}
 		defer {
 			C.if_freenameindex(ifaces)

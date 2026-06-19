@@ -15,19 +15,6 @@ fn C.freeaddrinfo(&C.addrinfo)
 fn C.getnameinfo(voidptr, u32, &char, u32, &char, u32, i32) i32
 fn C.gai_strerror(i32) &char
 
-$if windows {
-	fn C.WSAGetLastError() i32
-}
-
-fn addrinfo_last_error() IError {
-	$if windows {
-		code := int(C.WSAGetLastError())
-		return error_with_code(os.get_error_msg(code), code)
-	} $else {
-		return os.last_error()
-	}
-}
-
 struct C.addrinfo {
 mut:
 	ai_flags     i32
@@ -84,7 +71,7 @@ pub fn addr_info(hints AddrInfoParams) ![]AddrInfo {
 	if code != 0 {
 		$if !windows {
 			if code == C.EAI_SYSTEM {
-				return addrinfo_last_error()
+				return last_error()
 			}
 		}
 		msg := C.gai_strerror(code)
@@ -129,7 +116,7 @@ pub fn name_info(sa SocketAddr, params NameInfoParams) !(string, string) {
 	if code != 0 {
 		$if !windows {
 			if code == C.EAI_SYSTEM {
-				return addrinfo_last_error()
+				return last_error()
 			}
 		}
 		msg := C.gai_strerror(code)
