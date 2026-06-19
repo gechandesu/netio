@@ -58,14 +58,6 @@ fn socket_last_error() IError {
 	}
 }
 
-fn is_invalid_socket(res int) bool {
-	$if windows {
-		return res == C.INVALID_SOCKET
-	} $else {
-		return res == -1
-	}
-}
-
 pub struct Socket {
 pub:
 	fd int = -1
@@ -76,8 +68,14 @@ pub:
 // [socket(3)](https://man7.org/linux/man-pages/man3/socket.3p.html) for details.
 pub fn Socket.new(domain AddrFamily, st SocketType, proto Protocol) !Socket {
 	fd := C.socket(i32(domain), i32(st), i32(proto))
-	if is_invalid_socket(fd) {
-		return socket_last_error()
+	$if windows {
+		if fd == C.INVALID_SOCKET {
+			return socket_last_error()
+		}
+	} $else {
+		if fd == -1 {
+			return socket_last_error()
+		}
 	}
 	return Socket{
 		fd: fd
