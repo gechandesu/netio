@@ -41,7 +41,6 @@ jobs:
           mkdir D:\\Temp
           git clone --depth=1 https://github.com/vlang/v D:\\Temp\\v && cd D:\\Temp\\v && .\\makev.bat -gcc
           echo D:\\Temp\\v >> $GITHUB_PATH
-          v version
 
       - name: Run tests
         shell: bash
