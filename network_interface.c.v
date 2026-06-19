@@ -1,7 +1,5 @@
 module netio
 
-import os
-
 $if windows {
 	// -- not deeded?
 	#flag -lws2_32

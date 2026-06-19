@@ -1,7 +1,5 @@
 module netio
 
-import os
-
 $if windows {
 	// -- not needed?
 	#flag -lws2_32
