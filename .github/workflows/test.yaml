@@ -47,4 +47,4 @@ jobs:
         run: |
           v fmt -verify .
           v vet -v -W -I -F -r .
-          v test .
+          v -stats test .

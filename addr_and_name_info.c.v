@@ -1,10 +1,6 @@
 module netio
 
 $if windows {
-	// -- not needed?
-	// #flag -lws2_32
-	// #include <winsock2.h>
-	// --
 	#include <ws2tcpip.h>
 } $else {
 	#include <netdb.h>
@@ -18,7 +14,7 @@ $if !windows {
 	fn C.gai_strerror(i32) &char
 }
 
-fn addrinfo_error(code int) IError {
+fn addr_info_error(code int) IError {
 	$if windows {
 		return last_error()
 	} $else {
@@ -84,7 +80,7 @@ pub fn addr_info(hints AddrInfoParams) ![]AddrInfo {
 	mut results := &C.addrinfo(unsafe { nil })
 	code := C.getaddrinfo(node, service, &hints_, &results)
 	if code != 0 {
-		return addrinfo_error(code)
+		return addr_info_error(code)
 	}
 	defer {
 		C.freeaddrinfo(results)
@@ -123,7 +119,7 @@ pub fn name_info(sa SocketAddr, params NameInfoParams) !(string, string) {
 	code := C.getnameinfo(sa.ptr(), sa.size(), addr.data, addr.len, serv.data, serv.len,
 		params.flags)
 	if code != 0 {
-		return addrinfo_error(code)
+		return addr_info_error(code)
 	}
 	return unsafe {
 		tos_clone(&u8(addr.data))

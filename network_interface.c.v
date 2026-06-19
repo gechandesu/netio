@@ -1,12 +1,7 @@
 module netio
 
 $if windows {
-	// -- not deeded?
-	// #flag -lws2_32
 	#flag -liphlpapi
-	// #include <winsock2.h>
-	// #include <ws2tcpip.h>
-	// ---
 	#include <netioapi.h>
 } $else {
 	#include <net/if.h>

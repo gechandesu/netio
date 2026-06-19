@@ -2,7 +2,7 @@ import netio
 
 fn test_network_interfaces() {
 	ifs := netio.network_interfaces()!
-	// dump(ifs)
+	dump(ifs)
 	assert ifs.len > 0
 }
 
