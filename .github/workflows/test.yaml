@@ -39,7 +39,7 @@ jobs:
         shell: bash
         run: |
           git clone --depth=1 https://github.com/vlang/v && cd v && ./makev.bat -gcc
-          echo "$PWD/v" >> $GITHUB_PATH
+          ./v.exe symlink
           v version
 
       - name: Run tests
