@@ -38,9 +38,9 @@ jobs:
       - name: Setup V
         shell: bash
         run: |
-          mkdir D:/Temp
-          git clone --depth=1 https://github.com/vlang/v && cd D:/Temp/v && ./makev.bat -gcc
-          echo D:/Temp/v >> $GITHUB_PATH
+          mkdir D:\Temp
+          git clone --depth=1 https://github.com/vlang/v D:\Temp\v && cd D:\Temp\v && ./makev.bat -gcc
+          echo D:\Temp\v >> $GITHUB_PATH
           v version
 
       - name: Run tests
