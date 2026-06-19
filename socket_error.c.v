@@ -3,6 +3,9 @@ module netio
 import os
 
 $if windows {
+	#flag -lws2_32
+	#include <winsock2.h>
+
 	fn C.WSAGetLastError() i32
 }
 
