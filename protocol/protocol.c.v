@@ -7,9 +7,12 @@ import sync
 $if windows {
 	#flag -lws2_32
 	#include <winsock2.h>
-	#include <ws2tcpip.h>
+	// #include <ws2tcpip.h>
 
 	struct C.WSAData {}
+
+	fn C.WSAStartup(u16, &C.WSAData) i32
+	fn C.WSACleanup() i32
 
 	const wsa_version = u32(0x0202)
 } $else {
@@ -30,6 +33,9 @@ fn init() {
 }
 
 fn cleanup() {
+	$if windows {
+		_ := C.WSACleanup()
+	}
 	netio_proto_mutex.destroy()
 	unsafe { free(netio_proto_mutex) }
 }
@@ -50,7 +56,6 @@ $if !windows {
 }
 
 $if windows {
-	fn C.WSAStartup(u32, &C.WSAData) i32
 	fn C.WSAGetLastError() i32
 }
 

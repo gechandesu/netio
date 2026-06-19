@@ -6,7 +6,7 @@ $if windows {
 
 	struct C.WSAData {}
 
-	fn C.WSAStartup(u16, &voidptr) i32
+	fn C.WSAStartup(u16, &C.WSAData) i32
 	fn C.WSACleanup() i32
 
 	const wsa_version = u32(0x0202)
