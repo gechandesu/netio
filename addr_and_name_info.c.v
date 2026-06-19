@@ -3,8 +3,10 @@ module netio
 import os
 
 $if windows {
+	// -- not needed?
 	#flag -lws2_32
 	#include <winsock2.h>
+	// --
 	#include <ws2tcpip.h>
 } $else {
 	#include <netdb.h>
@@ -13,7 +15,22 @@ $if windows {
 fn C.getaddrinfo(&char, &char, &C.addrinfo, &&C.addrinfo) i32
 fn C.freeaddrinfo(&C.addrinfo)
 fn C.getnameinfo(voidptr, u32, &char, u32, &char, u32, i32) i32
-fn C.gai_strerror(i32) &char
+
+$if !windows {
+	fn C.gai_strerror(i32) &char
+}
+
+fn addrinfo_error(code int) IError {
+	$if windows {
+		return last_error()
+	} $else {
+		if code == C.EAI_SYSTEM {
+			return last_error()
+		}
+		msg := C.gai_strerror(code)
+		return error_with_code(unsafe { cstring_to_vstring(msg) }, code)
+	}
+}
 
 struct C.addrinfo {
 mut:
@@ -69,13 +86,7 @@ pub fn addr_info(hints AddrInfoParams) ![]AddrInfo {
 	mut results := &C.addrinfo(unsafe { nil })
 	code := C.getaddrinfo(node, service, &hints_, &results)
 	if code != 0 {
-		$if !windows {
-			if code == C.EAI_SYSTEM {
-				return last_error()
-			}
-		}
-		msg := C.gai_strerror(code)
-		return error_with_code(unsafe { cstring_to_vstring(msg) }, code)
+		return addrinfo_error(code)
 	}
 	defer {
 		C.freeaddrinfo(results)
@@ -114,13 +125,7 @@ pub fn name_info(sa SocketAddr, params NameInfoParams) !(string, string) {
 	code := C.getnameinfo(sa.ptr(), sa.size(), addr.data, addr.len, serv.data, serv.len,
 		params.flags)
 	if code != 0 {
-		$if !windows {
-			if code == C.EAI_SYSTEM {
-				return last_error()
-			}
-		}
-		msg := C.gai_strerror(code)
-		return error_with_code(unsafe { cstring_to_vstring(msg) }, code)
+		return addrinfo_error(code)
 	}
 	return unsafe {
 		tos_clone(&u8(addr.data))
