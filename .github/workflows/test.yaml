@@ -7,8 +7,10 @@ on:
   workflow_dispatch:
 
 jobs:
-  test:
+  test-linux:
     runs-on: ubuntu-latest
+    env:
+      VFLAGS: '-path "../|@vlib"'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -23,4 +25,26 @@ jobs:
           v fmt -verify .
           v vet -v -W -I -F -r .
           v missdoc -r --verify .
-          VFLAGS='-path ../|@vlib' v test .
+          v test .
+
+  test-windows:
+    runs-on: windows-latest
+    env:
+      VFLAGS: '-path "../|@vlib" -cc gcc'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup V
+        shell: bash
+        run: |
+          mkdir D:\\Temp
+          git clone --depth=1 https://github.com/vlang/v D:\\Temp\\v && cd D:\\Temp\\v && .\\makev.bat -gcc
+          echo D:\\Temp\\v >> $GITHUB_PATH
+
+      - name: Run tests
+        shell: bash
+        run: |
+          v fmt -verify .
+          v vet -v -W -I -F -r .
+          v -stats test .

@@ -1,9 +1,30 @@
 module netio
 
-import os
+$if windows {
+	#flag -lws2_32
+	#include <winsock2.h>
 
-#include <sys/socket.h>
-#include <netinet/in.h>
+	struct C.WSAData {}
+
+	fn C.WSAStartup(u16, &C.WSAData) i32
+	fn C.WSACleanup() i32
+
+	const wsa_version = u32(0x0202)
+
+	fn init() {
+		mut wsadata := C.WSAData{}
+		if C.WSAStartup(wsa_version, &wsadata) != 0 {
+			panic('netio: WSAStartup failed')
+		}
+	}
+
+	fn cleanup() {
+		_ := C.WSACleanup()
+	}
+} $else {
+	#include <sys/socket.h>
+	#include <netinet/in.h>
+}
 
 fn C.socket(i32, i32, i32) i32
 fn C.bind(i32, voidptr, i32) i32
@@ -11,7 +32,6 @@ fn C.connect(i32, voidptr, i32) i32
 fn C.listen(i32, i32) i32
 fn C.accept(i32, voidptr, voidptr) i32
 fn C.shutdown(i32, i32) i32
-fn C.close(i32) i32
 fn C.setsockopt(i32, i32, i32, voidptr, u32) i32
 fn C.getsockopt(i32, i32, i32, voidptr, &u32) i32
 fn C.recv(i32, voidptr, usize, i32) i32
@@ -19,18 +39,30 @@ fn C.recvfrom(i32, voidptr, usize, i32, voidptr, &u32) i32
 fn C.send(i32, voidptr, usize, i32) i32
 fn C.sendto(i32, voidptr, usize, i32, voidptr, u32) i32
 
+$if windows {
+	fn C.closesocket(i32) i32
+} $else {
+	fn C.close(i32) i32
+}
+
 pub struct Socket {
 pub:
 	fd int = -1
 }
 
 // Socket.new creates the new socket.
-// See [socket(7)](https://www.man7.org/linux/man-pages/man7/socket.7.html) and
+// See [socket(7)](https://man7.org/linux/man-pages/man7/socket.7.html) and
 // [socket(3)](https://man7.org/linux/man-pages/man3/socket.3p.html) for details.
 pub fn Socket.new(domain AddrFamily, st SocketType, proto Protocol) !Socket {
 	fd := C.socket(i32(domain), i32(st), i32(proto))
-	if fd == -1 {
-		return os.last_error()
+	$if windows {
+		if fd == C.INVALID_SOCKET {
+			return last_error()
+		}
+	} $else {
+		if fd == -1 {
+			return last_error()
+		}
 	}
 	return Socket{
 		fd: fd
@@ -52,14 +84,14 @@ pub enum Shutdown {
 // connect connects a socket. See [connect(3p)](https://man7.org/linux/man-pages/man3/connect.3p.html) for details.
 pub fn (s Socket) connect(addr SocketAddr) ! {
 	if C.connect(s.fd, addr.ptr(), addr.size()) == -1 {
-		return os.last_error()
+		return last_error()
 	}
 }
 
 // bind binds a name to a socket. See [bind(3p)](https://man7.org/linux/man-pages/man3/bind.3p.html) for details.
 pub fn (s Socket) bind(addr SocketAddr) ! {
 	if C.bind(s.fd, addr.ptr(), addr.size()) == -1 {
-		return os.last_error()
+		return last_error()
 	}
 }
 
@@ -67,7 +99,7 @@ pub fn (s Socket) bind(addr SocketAddr) ! {
 // See [listen(3p)](https://man7.org/linux/man-pages/man3/listen.3p.html) for details.
 pub fn (s Socket) listen(backlog int) ! {
 	if C.listen(s.fd, backlog) == -1 {
-		return os.last_error()
+		return last_error()
 	}
 }
 
@@ -79,7 +111,7 @@ pub fn (s Socket) accept() !(Socket, SocketAddr) {
 	mut sock_addr_len := sizeof(C.sockaddr_storage)
 	fd := C.accept(s.fd, sock_addr_storage, &sock_addr_len)
 	if fd == -1 {
-		return os.last_error()
+		return last_error()
 	}
 	sock := Socket{
 		fd: fd
@@ -92,7 +124,7 @@ pub fn (s Socket) accept() !(Socket, SocketAddr) {
 
 fn (s Socket) set_option_raw(level SocketLevel, option SocketOption, value voidptr) ! {
 	if C.setsockopt(s.fd, i32(level), i32(option), value, sizeof(value)) == -1 {
-		return os.last_error()
+		return last_error()
 	}
 }
 
@@ -104,7 +136,7 @@ pub fn (s Socket) set_option[T](level SocketLevel, option SocketOption, value T)
 
 fn (s Socket) get_option_raw(level SocketLevel, option SocketOption, mut value &i32, mut size &u32) ! {
 	if C.getsockopt(s.fd, i32(level), i32(option), value, size) == -1 {
-		return os.last_error()
+		return last_error()
 	}
 }
 
@@ -133,7 +165,7 @@ pub fn (s Socket) get_option[T](level SocketLevel, option SocketOption) !T {
 pub fn (s Socket) recv(mut buf []u8, flags MsgFlag) !int {
 	r := C.recv(s.fd, buf.data, buf.len, flags)
 	if r == -1 {
-		return os.last_error()
+		return last_error()
 	}
 	return r
 }
@@ -146,7 +178,7 @@ pub fn (s Socket) recv_from(mut buf []u8, flags MsgFlag) !(int, SocketAddr) {
 	mut sock_addr_len := sizeof(C.sockaddr_storage)
 	r := C.recvfrom(s.fd, buf.data, buf.len, flags, sock_addr_storage, sock_addr_len)
 	if r == -1 {
-		return os.last_error()
+		return last_error()
 	}
 	return r, unsafe { SocketAddr.from_ptr(sock_addr_storage, sock_addr_len)! }
 }
@@ -156,7 +188,7 @@ pub fn (s Socket) recv_from(mut buf []u8, flags MsgFlag) !(int, SocketAddr) {
 pub fn (s Socket) send(buf []u8, flags MsgFlag) !int {
 	r := C.send(s.fd, buf.data, buf.len, flags)
 	if r == -1 {
-		return os.last_error()
+		return last_error()
 	}
 	return r
 }
@@ -167,7 +199,7 @@ pub fn (s Socket) send(buf []u8, flags MsgFlag) !int {
 pub fn (s Socket) send_to(buf []u8, dst SocketAddr, flags MsgFlag) !int {
 	r := C.sendto(s.fd, buf.data, buf.len, flags, dst.ptr(), dst.size())
 	if r == -1 {
-		return os.last_error()
+		return last_error()
 	}
 	return r
 }
@@ -176,14 +208,19 @@ pub fn (s Socket) send_to(buf []u8, dst SocketAddr, flags MsgFlag) !int {
 // See [shutodwn(3p)](https://man7.org/linux/man-pages/man3/shutdown.3p.html) for details.
 pub fn (s Socket) shutdown(how Shutdown) ! {
 	if C.shutdown(s.fd, i32(how)) == -1 {
-		return os.last_error()
+		return last_error()
 	}
 }
 
 // close closes the socket.
 // See [close(3p)](https://man7.org/linux/man-pages/man3/close.3p.html) for details.
 pub fn (s Socket) close() ! {
-	if C.close(s.fd) == -1 {
-		return os.last_error()
+	res := $if windows {
+		C.closesocket(s.fd)
+	} $else {
+		C.close(s.fd)
+	}
+	if res == -1 {
+		return last_error()
 	}
 }
