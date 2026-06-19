@@ -72,7 +72,7 @@ pub:
 }
 
 // Socket.new creates the new socket.
-// See [socket(7)](https://www.man7.org/linux/man-pages/man7/socket.7.html) and
+// See [socket(7)](https://man7.org/linux/man-pages/man7/socket.7.html) and
 // [socket(3)](https://man7.org/linux/man-pages/man3/socket.3p.html) for details.
 pub fn Socket.new(domain AddrFamily, st SocketType, proto Protocol) !Socket {
 	fd := C.socket(i32(domain), i32(st), i32(proto))
@@ -143,7 +143,7 @@ fn (s Socket) set_option_raw(level SocketLevel, option SocketOption, value voidp
 	}
 }
 
-// set_option sets the socket option. See [socket(7)](https://www.man7.org/linux/man-pages/man7/socket.7.html)
+// set_option sets the socket option. See [socket(7)](https://man7.org/linux/man-pages/man7/socket.7.html)
 // and [setsockopt(3p)](https://man7.org/linux/man-pages/man3/setsockopt.3p.html) for details.
 pub fn (s Socket) set_option[T](level SocketLevel, option SocketOption, value T) ! {
 	s.set_option_raw(level, option, &value)!
@@ -155,7 +155,7 @@ fn (s Socket) get_option_raw(level SocketLevel, option SocketOption, mut value &
 	}
 }
 
-// get_option gets the socket option. See [socket(7)](https://www.man7.org/linux/man-pages/man7/socket.7.html)
+// get_option gets the socket option. See [socket(7)](https://man7.org/linux/man-pages/man7/socket.7.html)
 // and [getsockopt(3p)](https://man7.org/linux/man-pages/man3/getsockopt.3p.html) for details.
 // Example:
 // ```v
