@@ -229,7 +229,7 @@ pub fn (mut a SocketAddr) write(buf []u8) !int {
 }
 
 // ptr returns the pointer to sockaddr data.
-pub fn (a SocketAddr) ptr() &u8 {
+pub fn (a SocketAddr) ptr() voidptr {
 	return a.data
 }
 
@@ -252,8 +252,8 @@ pub fn (a SocketAddr) str() string {
 			mut addr := [4]u8{}
 			mut port := [2]u8{}
 			unsafe {
-				vmemcpy(port, a.ptr() + 2, 2)
-				vmemcpy(addr, a.ptr() + 4, 4)
+				vmemcpy(port, &u8(a.ptr()) + 2, 2)
+				vmemcpy(addr, &u8(a.ptr()) + 4, 4)
 			}
 			port_int := binary.big_endian_u16_fixed(port)
 			// vfmt off
@@ -268,8 +268,8 @@ pub fn (a SocketAddr) str() string {
 			mut port := [2]u8{}
 			mut res := ''
 			unsafe {
-				vmemcpy(port, a.ptr() + 2, 2)
-				vmemcpy(addr, a.ptr() + 8, 16)
+				vmemcpy(port, &u8(a.ptr()) + 2, 2)
+				vmemcpy(addr, &u8(a.ptr()) + 8, 16)
 			}
 			for i := 0; i < 16; i += 2 {
 				res += addr[i..i + 2].hex()
@@ -284,7 +284,7 @@ pub fn (a SocketAddr) str() string {
 			mut path := [max_unix_path_len]u8{}
 			mut res := ''
 			unsafe {
-				vmemcpy(path, a.ptr() + 2, max_unix_path_len)
+				vmemcpy(path, &u8(a.ptr()) + 2, max_unix_path_len)
 				res = tos_clone(&u8(path[..].data))
 			}
 			return res
