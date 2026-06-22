@@ -41,3 +41,42 @@ fn test_example_tcp_echo_server() {
 		}
 	}
 }
+
+fn test_example_dgram_socket_server() {
+	path := $if windows {
+		r'C:\\Temp\dgram_socket_server.sock'
+	} $else {
+		'/tmp/dgram_socket_server.sock'
+	}
+	expect_server := 'Listening on ${path}...
+	|Data received (5 bytes): hello
+	|Data received (5 bytes): world
+	|Data received (4 bytes): over
+	|Data received (5 bytes): dgram
+	|Data received (4 bytes): unix
+	|Data received (6 bytes): socket'.strip_margin()
+	expect_client := 'Sending data to ${path}...
+	|Sent 5 bytes
+	|Sent 5 bytes
+	|Sent 4 bytes
+	|Sent 5 bytes
+	|Sent 4 bytes
+	|Sent 6 bytes
+	|Sent 4 bytes'.strip_margin()
+
+	mut threads := []thread os.Result{}
+	threads << spawn run('examples/dgram_socket_server.v')
+	time.sleep(time.second * 1)
+	threads << spawn run('examples/dgram_socket_client.v')
+	results := threads.wait()
+
+	for result in results {
+		dump(result)
+		assert result.exit_code == 0
+		if result.output.contains('Listening') {
+			assert result.output.limit(expect_server.len) == expect_server
+		} else {
+			assert result.output.limit(expect_client.len) == expect_client
+		}
+	}
+}
