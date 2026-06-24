@@ -107,8 +107,8 @@ pub fn (s Socket) listen(backlog int) ! {
 // The return values are the new socket connected to remote and the remote socket address.
 // See [accept(3p)](https://man7.org/linux/man-pages/man3/accept.3p.html) for details.
 pub fn (s Socket) accept() !(Socket, SocketAddr) {
-	mut sock_addr_storage := &C.sockaddr_storage{}
-	mut sock_addr_len := sizeof(C.sockaddr_storage)
+	mut sock_addr_storage := &SocketAddrStorage{}
+	mut sock_addr_len := sizeof(sock_addr_storage)
 	fd := C.accept(s.fd, sock_addr_storage, &sock_addr_len)
 	if fd == -1 {
 		return last_error()
@@ -120,6 +120,54 @@ pub fn (s Socket) accept() !(Socket, SocketAddr) {
 		SocketAddr.from_ptr(sock_addr_storage, sock_addr_len)!
 	}
 	return sock, sock_addr
+}
+
+// accept_addr accepts a new connection on a socket.
+// This function does exactly the same as `accept`, but allows you to specify your
+// own sockaddr instance instead of creating a new one on each call.
+//
+// Example:
+// ```v
+// import netio
+//
+// addr := netio.SocketAddr.new_ipv6([16]u8{}, 9999) // [::]:9999
+// mut socket := netio.Socket.new(netio.af_inet6, netio.sock_stream, 0)!
+//
+// socket.set_option(netio.sol_socket, netio.so_reuseaddr, 1)!
+// socket.set_option(netio.ipproto_ipv6, netio.ipv6_v6only, 0)!
+// socket.bind(addr)!
+// socket.listen(10)!
+//
+// println('Listening on tcp://${addr}, try connect to it via telnet...')
+// mut peer_addr := unsafe { netio.SocketAddr.new(netio.af_unspec, sizeof(netio.SocketAddrStorage)) }
+// new_socket := socket.accept_addr(mut peer_addr)!
+//
+// dump(peer_addr)
+// dump(peer_addr.family()) // 10 (AF_INET6)
+// dump(peer_addr.size())   // 28
+//
+// new_socket.close()!
+// socket.close()!
+// ```
+pub fn (s Socket) accept_addr(mut addr SocketAddr) !Socket {
+	mut sa := addr.ptr()
+	mut len := addr.size()
+	fd := C.accept(s.fd, sa, &len)
+	if fd == -1 {
+		return last_error()
+	}
+	addr.len = int(len)
+	return Socket{fd}
+}
+
+// accept_no_addr accepts a new connection on a socket.
+// Unlike accept and accept_addr this function does not provide peer address.
+pub fn (s Socket) accept_no_addr() !Socket {
+	fd := C.accept(s.fd, unsafe { nil }, unsafe { nil })
+	if fd == -1 {
+		return last_error()
+	}
+	return Socket{fd}
 }
 
 fn (s Socket) set_option_raw(level SocketLevel, option SocketOption, value voidptr) ! {

@@ -4,6 +4,10 @@ import encoding.binary
 
 struct C.sockaddr_storage {}
 
+// SocketAddrStorage represents the sockaddr_storage struct which can be used to store any socket address.
+// See [sockaddr(3type)](https://www.man7.org/linux/man-pages/man3/sockaddr.3type.html) for details.
+pub type SocketAddrStorage = C.sockaddr_storage
+
 pub const max_unix_path_len = $if linux {
 	108
 } $else $if windows {
