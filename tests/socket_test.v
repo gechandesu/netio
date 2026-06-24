@@ -3,14 +3,14 @@ import time
 
 fn test_socket_new() {
 	socket := netio.Socket.new(netio.af_inet, netio.sock_stream, 0)!
-	socket.close() or { panic(err) }
+	socket.close()!
 	assert socket.fd != -1
 }
 
 fn test_socket_type() {
 	socket := netio.Socket.new(netio.af_inet, netio.sock_stream, 0)!
 	socket_type := socket.type()!
-	socket.close() or { panic(err) }
+	socket.close()!
 	assert socket_type == netio.sock_stream
 }
 

@@ -107,9 +107,9 @@ pub fn (s Socket) listen(backlog int) ! {
 // The return values are the new socket connected to remote and the remote socket address.
 // See [accept(3p)](https://man7.org/linux/man-pages/man3/accept.3p.html) for details.
 pub fn (s Socket) accept() !(Socket, SocketAddr) {
-	mut sock_addr_storage := &SocketAddrStorage{}
+	mut sock_addr_storage := voidptr(&SocketAddrStorage{})
 	mut sock_addr_len := sizeof(SocketAddrStorage)
-	fd := C.accept(s.fd, voidptr(sock_addr_storage), &sock_addr_len)
+	fd := C.accept(s.fd, sock_addr_storage, &sock_addr_len)
 	if fd == -1 {
 		return last_error()
 	}
@@ -222,8 +222,8 @@ pub fn (s Socket) recv(mut buf []u8, flags MsgFlag) !int {
 // read and the remote peer address.
 // See [recvfrom(3p)](https://man7.org/linux/man-pages/man3/recvfrom.3p.html) for details.
 pub fn (s Socket) recv_from(mut buf []u8, flags MsgFlag) !(int, SocketAddr) {
-	mut sock_addr_storage := &C.sockaddr_storage{}
-	mut sock_addr_len := sizeof(C.sockaddr_storage)
+	mut sock_addr_storage := voidptr(&SocketAddrStorage{})
+	mut sock_addr_len := sizeof(SocketAddrStorage)
 	r := C.recvfrom(s.fd, buf.data, buf.len, flags, sock_addr_storage, &sock_addr_len)
 	if r == -1 {
 		return last_error()
