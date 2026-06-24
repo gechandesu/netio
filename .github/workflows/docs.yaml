@@ -18,6 +18,7 @@ jobs:
 
       - name: Build docs
         run: |
+          v missdoc -r --verify .
           v doc -f html -m .
           pushd _docs
           ln -vs ${{ github.event.repository.name }}.html index.html

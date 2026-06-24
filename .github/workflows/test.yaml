@@ -9,8 +9,6 @@ on:
 jobs:
   test-linux:
     runs-on: ubuntu-latest
-    env:
-      VFLAGS: '-path "../|@vlib"'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -25,6 +23,25 @@ jobs:
           v fmt -verify .
           v vet -v -W -I -F -r .
           v missdoc -r --verify .
+          export VFLAGS='-path "../|@vlib"'
+          v test .
+
+  test-linux-gcc-cstrict:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup V
+        run: |
+          git clone --depth=1 https://github.com/vlang/v /tmp/v && cd /tmp/v && make
+          /tmp/v/v symlink
+
+      - name: Run tests
+        run: |
+          v fmt -verify .
+          v vet -v -W -I -F -r .
+          export VFLAGS='-path "../|@vlib" -cc gcc -cstrict'
           v test .
 
   test-windows:
@@ -47,4 +64,5 @@ jobs:
         run: |
           v fmt -verify .
           v vet -v -W -I -F -r .
+          export VFLAGS='-path "../|@vlib" -cc gcc'
           v -stats test .
