@@ -108,7 +108,7 @@ pub fn (s Socket) listen(backlog int) ! {
 // See [accept(3p)](https://man7.org/linux/man-pages/man3/accept.3p.html) for details.
 pub fn (s Socket) accept() !(Socket, SocketAddr) {
 	mut sock_addr_storage := &SocketAddrStorage{}
-	mut sock_addr_len := sizeof(sock_addr_storage)
+	mut sock_addr_len := sizeof(SocketAddrStorage)
 	fd := C.accept(s.fd, sock_addr_storage, &sock_addr_len)
 	if fd == -1 {
 		return last_error()
