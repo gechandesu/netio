@@ -21,7 +21,7 @@ fn addr_info_error(code int) IError {
 		if code == C.EAI_SYSTEM {
 			return last_error()
 		}
-		msg := C.gai_strerror(code)
+		msg := &char(C.gai_strerror(code))
 		return error_with_code(unsafe { cstring_to_vstring(msg) }, code)
 	}
 }
