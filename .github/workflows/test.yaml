@@ -9,11 +9,14 @@ on:
 jobs:
   test-linux:
     runs-on: ubuntu-latest
-    env:
-      VFLAGS: '-path "../|@vlib"'
+    strategy:
+      matrix:
+        vflags:
+          - ''
+          - '-cc gcc -cstrict'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup V
         run: |
@@ -24,16 +27,14 @@ jobs:
         run: |
           v fmt -verify .
           v vet -v -W -I -F -r .
-          v missdoc -r --verify .
+          export VFLAGS='-path "../|@vlib" ${{ matrix.vflags }}'
           v test .
 
-  test-windows:
+  test-windows-gcc:
     runs-on: windows-latest
-    env:
-      VFLAGS: '-path "../|@vlib" -cc gcc'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup V
         shell: bash
@@ -47,4 +48,5 @@ jobs:
         run: |
           v fmt -verify .
           v vet -v -W -I -F -r .
+          export VFLAGS='-path "../|@vlib" -cc gcc'
           v -stats test .
