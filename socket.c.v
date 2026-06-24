@@ -109,7 +109,7 @@ pub fn (s Socket) listen(backlog int) ! {
 pub fn (s Socket) accept() !(Socket, SocketAddr) {
 	mut sock_addr_storage := &SocketAddrStorage{}
 	mut sock_addr_len := sizeof(SocketAddrStorage)
-	fd := C.accept(s.fd, sock_addr_storage, &sock_addr_len)
+	fd := C.accept(s.fd, voidptr(sock_addr_storage), &sock_addr_len)
 	if fd == -1 {
 		return last_error()
 	}
