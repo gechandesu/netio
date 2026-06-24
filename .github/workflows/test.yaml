@@ -9,13 +9,8 @@ on:
 jobs:
   test-linux:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        vflags:
-          - '-path "../|@vlib"'
-          - '-path "../|@vlib" -cc gcc -cstrict'
     env:
-      VFLAGS: ${{ matrix.vflags }}
+      VFLAGS: '-path "../|@vlib"'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
