@@ -2,7 +2,7 @@ import os
 import time
 
 fn run(entrypoint string) os.Result {
-	cmd := 'v -Wfatal-errors -path "${@VMODROOT}/../|@vlib" run ${entrypoint}'
+	cmd := 'v -Wfatal-errors -d netio_test -path "${@VMODROOT}/../|@vlib" run ${entrypoint}'
 	return os.execute(cmd)
 }
 
@@ -15,7 +15,7 @@ fn test_example_host_fqdn() {
 
 fn test_example_tcp_echo_server() {
 	expect_server := 'Listening on 127.0.0.1:1088...
-	|Accpeted connection. Remote address: 127.0.0.1, remote port: 1001
+	|Accpeted connection. Remote address: 127.0.0.1, remote port: 1234
 	|Received from client: 18 bytes, data: Hello from client!
 	|Sent to the client: 18 bytes, data: Hello from client!'.strip_margin()
 
@@ -24,7 +24,7 @@ fn test_example_tcp_echo_server() {
 	|Received from server: 18 bytes, data: Hello from client!'.strip_margin()
 
 	mut threads := []thread os.Result{}
-	threads << spawn run('examples/tcp_echo_server.v -test')
+	threads << spawn run('examples/tcp_echo_server.v')
 	time.sleep(time.second * 1)
 	threads << spawn run('examples/tcp_echo_client.v')
 	results := threads.wait()
@@ -36,6 +36,56 @@ fn test_example_tcp_echo_server() {
 		assert result.exit_code == 0
 		if result.output.contains('Listening') {
 			assert result.output.limit(expect_server.len) == expect_server
+		} else {
+			assert result.output.limit(expect_client.len) == expect_client
+		}
+	}
+}
+
+fn test_example_listen_on_anyaddr() {
+	expect_server := 'Received from client: 18 bytes, data: Hello from client!'.strip_margin()
+	expect_client := 'Connected to server 127.0.0.1:1088...
+	|Sent to the server: 18 bytes, data: Hello from client!
+	|Received from server: 18 bytes, data: Hello from client!'.strip_margin()
+
+	mut threads := []thread os.Result{}
+	threads << spawn run('examples/listen_on_anyaddr.v')
+	time.sleep(time.second * 1)
+	threads << spawn run('examples/tcp_echo_client.v')
+	results := threads.wait()
+
+	for result in results {
+		dump(result)
+		assert result.exit_code == 0
+		if result.output.contains('Listening') {
+			assert result.output.contains(expect_server)
+		} else {
+			assert result.output.limit(expect_client.len) == expect_client
+		}
+	}
+}
+
+fn test_example_simple_chat() {
+	expect_client := "Connected to server 127.0.0.1:1088
+	|Type 'quit' or 'exit' to end the chat.
+	|Server: pong
+	|Client requested to end chat. Closing connection.
+	|Client socket closed.".strip_margin()
+
+	mut threads := []thread os.Result{}
+	threads << spawn run('examples/simple_chat_server.v')
+	time.sleep(time.second * 1)
+	threads << spawn run('examples/simple_chat_client.v')
+	results := threads.wait()
+
+	for result in results {
+		dump(result)
+		assert result.exit_code == 0
+		if result.output.contains('Server listening') {
+			// Remote port in "Connection accepted from" varies by platform.
+			assert result.output.contains('Server listening on 0.0.0.0:1088')
+			assert result.output.contains('Client: ping')
+			assert result.output.contains('Client: quit')
 		} else {
 			assert result.output.limit(expect_client.len) == expect_client
 		}

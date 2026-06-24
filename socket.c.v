@@ -224,7 +224,7 @@ pub fn (s Socket) recv(mut buf []u8, flags MsgFlag) !int {
 pub fn (s Socket) recv_from(mut buf []u8, flags MsgFlag) !(int, SocketAddr) {
 	mut sock_addr_storage := &C.sockaddr_storage{}
 	mut sock_addr_len := sizeof(C.sockaddr_storage)
-	r := C.recvfrom(s.fd, buf.data, buf.len, flags, sock_addr_storage, sock_addr_len)
+	r := C.recvfrom(s.fd, buf.data, buf.len, flags, sock_addr_storage, &sock_addr_len)
 	if r == -1 {
 		return last_error()
 	}

@@ -2,6 +2,8 @@ import os
 import netio
 
 fn main() {
+	mut step := 0
+
 	mut socket := netio.Socket.new(netio.af_inet, netio.sock_stream, 0)!
 	server_addr := netio.SocketAddr.new_ipv4([u8(127), 0, 0, 1]!, 1088)
 	socket.connect(server_addr)!
@@ -12,7 +14,12 @@ fn main() {
 	mut buf := []u8{len: 1024}
 
 	for {
-		msg := os.input('Client: ')
+		msg := $if netio_test ? {
+			defer { step++ }
+			if step == 0 { 'ping' } else { 'quit' }
+		} $else {
+			os.input('Client: ')
+		}
 		if msg in ['quit', 'exit'] {
 			println('Client requested to end chat. Closing connection.')
 			socket.send(msg.bytes(), 0)!

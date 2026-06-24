@@ -1,9 +1,6 @@
 import netio
 
 fn main() {
-	// This is only for examples_test.v
-	is_test := '-test' in arguments()
-
 	// Create listen address.
 	listen_addr := netio.SocketAddr.new_ipv4([u8(127), 0, 0, 1]!, 1088)
 
@@ -54,8 +51,8 @@ fn main() {
 		flags: netio.ni_numerichost | netio.ni_numericserv
 	)!
 
-	if is_test {
-		remote_port = '1001'
+	$if netio_test ? {
+		remote_port = '1234'
 	}
 	eprintln('Accpeted connection. Remote address: ${remote_host}, remote port: ${remote_port}')
 
