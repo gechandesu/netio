@@ -38,7 +38,11 @@ fn main() {
 			}
 		}
 
-		msg := os.input('Server: ')
+		msg := $if netio_test ? {
+			'pong'
+		} $else {
+			os.input('Server: ')
+		}
 		if msg in ['quit', 'exit'] {
 			println('Server requested to end chat. Closing connection.')
 			conn.send(msg.bytes(), 0)!

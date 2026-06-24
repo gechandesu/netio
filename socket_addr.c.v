@@ -59,7 +59,7 @@ pub fn SocketAddr.new_ipv6(addr [16]u8, port u16, params Inet6SocketAddrParams) 
 // fit in platform dependent `max_unix_path_len` const value.
 pub fn SocketAddr.new_unix(path string) !SocketAddr {
 	if path.len > max_unix_path_len {
-		return error('too long path to socket, max length is ${max_unix_path_len}')
+		return error('too long unix socket path, max length is ${max_unix_path_len}')
 	}
 	mut sock_addr := unsafe { SocketAddr.new(af_unix, usize(max_unix_path_len) + 2) }
 	unsafe {
