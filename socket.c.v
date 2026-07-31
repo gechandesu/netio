@@ -27,8 +27,8 @@ $if windows {
 }
 
 fn C.socket(i32, i32, i32) i32
-fn C.bind(i32, voidptr, i32) i32
-fn C.connect(i32, voidptr, i32) i32
+fn C.bind(i32, voidptr, u32) i32
+fn C.connect(i32, voidptr, u32) i32
 fn C.listen(i32, i32) i32
 fn C.accept(i32, voidptr, voidptr) i32
 fn C.shutdown(i32, i32) i32
