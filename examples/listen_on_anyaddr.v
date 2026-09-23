@@ -17,7 +17,7 @@ fn main() {
 	// We want to bind a server socket to the all available local addresses,
 	// (both IPv4 and IPv6) so collect the address info entries for it.
 	ai := netio.addr_info(
-		service:  '1088'            // The port number to listen.
+		service:  '1088'              // The port number to listen.
 		socktype: netio.sock_stream // Address must support TCP transport.
 		family:   netio.af_inet6    // IPv6 support.
 		flags:    netio.ai_passive  // Passive mode for binding to any address (0.0.0.0, ::).

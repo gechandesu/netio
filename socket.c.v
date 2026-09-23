@@ -182,7 +182,7 @@ pub fn (s Socket) set_option[T](level SocketLevel, option SocketOption, value T)
 	s.set_option_raw(level, option, &value)!
 }
 
-fn (s Socket) get_option_raw(level SocketLevel, option SocketOption, mut value &i32, mut size &u32) ! {
+fn (s Socket) get_option_raw(level SocketLevel, option SocketOption, value voidptr, mut size &u32) ! {
 	if C.getsockopt(s.fd, i32(level), i32(option), value, size) == -1 {
 		return last_error()
 	}
@@ -198,9 +198,9 @@ fn (s Socket) get_option_raw(level SocketLevel, option SocketOption, mut value &
 // assert socket.get_option[int](netio.sol_socket, netio.so_reuseaddr)! == 1
 // ```
 pub fn (s Socket) get_option[T](level SocketLevel, option SocketOption) !T {
-	mut result := i32(0)
-	mut size := sizeof(result)
-	s.get_option_raw(level, option, mut &result, mut &size)!
+	mut result := voidptr(T{})
+	mut size := u32(sizeof(result))
+	s.get_option_raw(level, option, &result, mut &size)!
 	$if T is bool {
 		return result != 0
 	} $else {

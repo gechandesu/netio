@@ -27,7 +27,7 @@ jobs:
         run: |
           v fmt -verify .
           v vet -v -W -I -F -r .
-          export VFLAGS='-path "../|@vlib" ${{ matrix.vflags }}'
+          export VFLAGS='${{ matrix.vflags }}'
           v test .
 
   test-windows-gcc:
@@ -48,5 +48,5 @@ jobs:
         run: |
           v fmt -verify .
           v vet -v -W -I -F -r .
-          export VFLAGS='-path "../|@vlib" -cc gcc'
+          export VFLAGS='-cc gcc'
           v -stats test .
