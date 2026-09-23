@@ -28,7 +28,7 @@ fn test_find_network_interface() {
 	assert netio.find_network_interface(iface.index.str())!.index == iface.index
 }
 
-fn test_network_interface_not_found() {
+fn test_network_interface_not_found_by_name() {
 	netio.find_network_interface('nonexistent_iface_xyz123') or {
 		assert err is netio.NetworkInterfaceNotFound
 		e := err as netio.NetworkInterfaceNotFound
@@ -36,7 +36,9 @@ fn test_network_interface_not_found() {
 		return
 	}
 	assert false, 'expected NetworkInterfaceNotFound error'
+}
 
+fn test_network_interface_not_found_by_index() {
 	netio.index_to_name(999999) or {
 		assert err is netio.NetworkInterfaceNotFound
 		e := err as netio.NetworkInterfaceNotFound

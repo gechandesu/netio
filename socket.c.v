@@ -199,7 +199,7 @@ fn (s Socket) get_option_raw(level SocketLevel, option SocketOption, mut value &
 // ```
 pub fn (s Socket) get_option[T](level SocketLevel, option SocketOption) !T {
 	mut result := i32(0)
-	mut size := sizeof(result)
+	mut size := u32(sizeof(result))
 	s.get_option_raw(level, option, mut &result, mut &size)!
 	$if T is bool {
 		return result != 0
