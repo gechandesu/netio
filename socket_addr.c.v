@@ -61,7 +61,7 @@ pub fn SocketAddr.new_unix(path string) !SocketAddr {
 	if path.len > max_unix_path_len {
 		return error('too long unix socket path, max length is ${max_unix_path_len}')
 	}
-	mut sock_addr := unsafe { SocketAddr.new(af_unix, usize(max_unix_path_len) + 2) }
+	mut sock_addr := unsafe { SocketAddr.new(af_unix, max_unix_path_len + 2) }
 	unsafe {
 		sock_addr.write(path.bytes()) or {}
 	}
@@ -122,8 +122,8 @@ pub fn SocketAddr.new_unix(path string) !SocketAddr {
 // println(sa)
 // ```
 @[unsafe]
-pub fn SocketAddr.new(af AddrFamily, size isize) SocketAddr {
-	ptr := unsafe { vcalloc(usize(size)) }
+pub fn SocketAddr.new(af AddrFamily, size int) SocketAddr {
+	ptr := unsafe { vcalloc(size) }
 	mut sock_addr := SocketAddr{
 		data: ptr
 		len:  int(size)
@@ -146,11 +146,11 @@ pub fn SocketAddr.new(af AddrFamily, size isize) SocketAddr {
 
 // SocketAddr.from_ptr_copy creates new socket address by copying data from specified pointer.
 @[unsafe]
-pub fn SocketAddr.from_ptr_copy(ptr voidptr, size isize) !SocketAddr {
+pub fn SocketAddr.from_ptr_copy(ptr voidptr, size int) !SocketAddr {
 	if isnil(ptr) {
 		return error('${@METHOD}: cannot accept nil ptr')
 	}
-	data := unsafe { vcalloc(usize(size)) }
+	data := unsafe { vcalloc(size) }
 	unsafe {
 		vmemcpy(data, ptr, size)
 	}
@@ -163,7 +163,7 @@ pub fn SocketAddr.from_ptr_copy(ptr voidptr, size isize) !SocketAddr {
 // SocketAddr.from_ptr creates new socket address from specified pointer.
 // Note: Data is reused, not copied.
 @[unsafe]
-pub fn SocketAddr.from_ptr(ptr voidptr, size isize) !SocketAddr {
+pub fn SocketAddr.from_ptr(ptr voidptr, size int) !SocketAddr {
 	if isnil(ptr) {
 		return error('${@METHOD}: cannot accept nil ptr')
 	}
@@ -182,9 +182,9 @@ pub fn (a SocketAddr) family() AddrFamily {
 	mut f := 0
 	unsafe {
 		$if bsd {
-			vmemcpy(&f, a.data + 1, isize(1))
+			vmemcpy(&f, a.data + 1, 1)
 		} $else {
-			vmemcpy(&f, a.data, isize(2))
+			vmemcpy(&f, a.data, 2)
 		}
 	}
 	return f

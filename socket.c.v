@@ -34,10 +34,10 @@ fn C.accept(i32, voidptr, voidptr) i32
 fn C.shutdown(i32, i32) i32
 fn C.setsockopt(i32, i32, i32, voidptr, u32) i32
 fn C.getsockopt(i32, i32, i32, voidptr, &u32) i32
-fn C.recv(i32, voidptr, usize, i32) i32
-fn C.recvfrom(i32, voidptr, usize, i32, voidptr, &u32) i32
-fn C.send(i32, voidptr, usize, i32) i32
-fn C.sendto(i32, voidptr, usize, i32, voidptr, u32) i32
+fn C.recv(i32, voidptr, uint, i32) i32
+fn C.recvfrom(i32, voidptr, uint, i32, voidptr, &u32) i32
+fn C.send(i32, voidptr, uint, i32) i32
+fn C.sendto(i32, voidptr, uint, i32, voidptr, u32) i32
 
 $if windows {
 	fn C.closesocket(i32) i32
@@ -117,7 +117,7 @@ pub fn (s Socket) accept() !(Socket, SocketAddr) {
 		fd: fd
 	}
 	sock_addr := unsafe {
-		SocketAddr.from_ptr(sock_addr_storage, sock_addr_len)!
+		SocketAddr.from_ptr(sock_addr_storage, int(sock_addr_len))!
 	}
 	return sock, sock_addr
 }
@@ -228,7 +228,7 @@ pub fn (s Socket) recv_from(mut buf []u8, flags MsgFlag) !(int, SocketAddr) {
 	if r == -1 {
 		return last_error()
 	}
-	return r, unsafe { SocketAddr.from_ptr(sock_addr_storage, sock_addr_len)! }
+	return r, unsafe { SocketAddr.from_ptr(sock_addr_storage, int(sock_addr_len))! }
 }
 
 // send sends a message on socket.

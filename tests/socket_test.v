@@ -43,7 +43,7 @@ fn tcp_server() {
 	conn.shutdown(netio.Shutdown.read_and_write) or { panic(err) }
 	conn.close() or { panic(err) }
 
-	mut peer_addr := unsafe { netio.SocketAddr.new(netio.af_unspec, sizeof(netio.SocketAddrStorage)) }
+	mut peer_addr := unsafe { netio.SocketAddr.new(netio.af_unspec, int(sizeof(netio.SocketAddrStorage))) }
 	conn2 := server.accept_addr(mut peer_addr) or { panic(err) }
 	assert peer_addr.str().starts_with('127.0.0.1:')
 	conn2.close() or { panic(err) }

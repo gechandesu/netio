@@ -2,9 +2,19 @@ import os
 import time
 
 fn run(entrypoint string) os.Result {
-	cmd := 'v -Wfatal-errors -d netio_test -n -path "${@VMODROOT}/../|@vlib" run ${entrypoint}'
+	cmd := [
+		'v',
+		'-Wfatal-errors',
+		'-d',
+		'netio_test',
+		'-n',
+		'-path',
+		'${@VMODROOT}/../|@vlib',
+		'run',
+		'${entrypoint}',
+	]
 	dump(cmd)
-	return os.execute(cmd)
+	return os.exec(cmd)
 }
 
 fn test_example_host_fqdn() {

@@ -33,10 +33,10 @@ fn test_socket_addr_family_ptr_size() {
 
 fn test_socket_addr_from_ptr() {
 	orig := netio.SocketAddr.new_ipv4([u8(127), 0, 0, 1]!, 8080)
-	cpy := unsafe { netio.SocketAddr.from_ptr_copy(orig.ptr(), orig.size())! }
+	cpy := unsafe { netio.SocketAddr.from_ptr_copy(orig.ptr(), int(orig.size()))! }
 	assert cpy.str() == orig.str()
 
-	borrowed := unsafe { netio.SocketAddr.from_ptr(orig.ptr(), orig.size())! }
+	borrowed := unsafe { netio.SocketAddr.from_ptr(orig.ptr(), int(orig.size()))! }
 	assert borrowed.str() == orig.str()
 }
 
